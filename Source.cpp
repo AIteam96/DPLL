@@ -61,8 +61,33 @@ formulae read_initial() {
 		cout << "\tCouldn't read file!\n\tPlease enter correct path \n";
 		exit(0);
 	}
-	
 
+
+}
+void check_satisfiability_formulae(formulae formulae) /**/
+{
+	int count = 0;
+	for (int i = 0; i < formulae.f.size(); i++)
+	{
+		if (formulae.f[i].assigned)
+		{
+			count++;
+			if (formulae.f[i].value == false)
+			{
+				formulae.satisfiable = false;
+				break;
+			}
+		}
+		else
+		{
+			formulae.satisfiable = false;
+			break;
+		}
+		if (count == formulae.f.size())
+		{
+			formulae.satisfiable = true;
+		}
+	}
 }
 
 int main() {
