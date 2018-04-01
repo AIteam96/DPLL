@@ -9,9 +9,11 @@ using namespace std;
 struct symbol
 {
 	char value;//T for true or F for false or N for null (temporary)
-	bool assigned;//a flag to know if it is assigned or not
+	bool sign;//T for true or F for false
 	bool pure;//Is it a pure symbol or not?
 	int name;//which variable?
+	bool assigned;// flag to know if it is assigned or not this meanes this symbol was added to model or not
+
 };
 
 struct clause
@@ -93,7 +95,47 @@ void check_satisfiability_formulae(formulae formulae) /**/
 		}
 	}
 }
-bool DPLL(formulae formul)
+bool logicOR(bool a, bool b)
+{
+	if (a == true || b == true)
+		return true;
+	if (a == false && b == false)
+		return true;
+}
+void update(formulae formul, symbol symbol)
+{
+	for (int i = 0; i < formul.f.size(); i++)
+	{
+		int count = 0;
+		bool clause_value = false;
+		for (int j = 0; j < formul.f[i].S.size(); j++)
+		{
+			if (formul.f[i].S[j].assigned)
+			{
+				count++;
+				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
+			}
+			if (formul.f[i].S[j].name == symbol.name)
+			{
+				if (formul.f[i].S[j].sign == symbol.sign)
+					formul.f[i].S[j].value = symbol.value;
+				else
+					formul.f[i].S[j].value = !symbol.value;
+				formul.f[i].S[j].assigned = true;
+				count++;
+				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
+			}
+			if (count == formul.f[i].S.size())
+			{
+				formul.f[i].value = clause_value;
+				formul.f[i].assigned = true;
+			}
+		}
+
+	}
+
+}
+bool DPLL(formulae formul, vector<symbol> Model)
 {
 	if (formul.assigned = true)
 		return formul.satisfiable;
