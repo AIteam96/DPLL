@@ -9,7 +9,7 @@ using namespace std;
 struct symbol
 {
 	char value;//T for true or F for false or N for null (temporary)
-	bool assigned;//T for true or F for false
+	bool assigned;//a flag to know if it is assigned or not
 	bool pure;//Is it a pure symbol or not?
 	int name;//which variable?
 };
@@ -19,14 +19,15 @@ struct clause
 	bool isempty;
 	bool isunit;
 	char value;//T for true or F for false or N for null (temporary)
-	bool assigned;//T for true or F for false
+	bool assigned;//a flag to know if it is assigned or not
 	vector<symbol> S;//A set of symbols that have created the clause
 };
 
-struct formulae {
-
-	bool satisfiable;//satisfiability of the formulae
+struct formulae
+{
 	vector <clause> f;
+	bool satisfiable;//satisfiability of the formulae
+	bool assigned;//a flag to know if it is assigned or not
 };
 
 formulae read_initial() {
@@ -66,6 +67,7 @@ formulae read_initial() {
 }
 void check_satisfiability_formulae(formulae formulae) /**/
 {
+	formulae.assigned = false;
 	int count = 0;
 	for (int i = 0; i < formulae.f.size(); i++)
 	{
@@ -74,22 +76,28 @@ void check_satisfiability_formulae(formulae formulae) /**/
 			count++;
 			if (formulae.f[i].value == false)
 			{
+				formulae.assigned = true;
 				formulae.satisfiable = false;
 				break;
 			}
 		}
 		else
 		{
-			formulae.satisfiable = false;
+			formulae.assigned = false;
 			break;
 		}
 		if (count == formulae.f.size())
 		{
+			formulae.assigned = true;
 			formulae.satisfiable = true;
 		}
 	}
 }
-
+bool DPLL(formulae formul)
+{
+	if (formul.assigned = true)
+		return formul.satisfiable;
+}
 int main() {
 
 	formulae input = read_initial();
