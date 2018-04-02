@@ -2,7 +2,8 @@
 #include<vector>
 #include<fstream>
 #include<string>
-
+#include<cmath>
+#include<ctgmath>
 using namespace std;
 
 
@@ -34,6 +35,7 @@ struct formulae
 
 formulae read_initial() 
 {
+	int dummyint;
 	formulae T_f;
 	fstream inputfile("E:\\Course\\AI\\AI2\\HW2_AI2\\Sample1.txt");
 	if (inputfile.is_open()) {
@@ -43,7 +45,8 @@ formulae read_initial()
 			clause T_c;
 			for (int j = 0; j < 3; j++) {
 				symbol T_s;
-				inputfile >> T_s.name;
+				inputfile >> dummyint;
+				T_s.name = abs(dummyint);
 				T_s.assigned = false;
 				T_s.value = 'N';
 				T_s.pure = false;
@@ -85,17 +88,17 @@ bool check_unit_clause(formulae formulae, clause clause)
 	{
 		if (clause.S[i].assigned == false) {
 			if (i == 0) {
-				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].sign == false && clause.S[i + 2].sign == false) {
+				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].value == false && clause.S[i + 2].value == false) {
 					return true;
 				}
 			}
 			if (i == 1) {
-				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].sign == false && clause.S[i + 1].sign == false) {
+				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].value == false && clause.S[i + 1].value == false) {
 					return true;
 				}
 			}
 			if (i == 2) {
-				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].sign == false && clause.S[i - 2].sign == false) {
+				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].value == false && clause.S[i - 2].value == false) {
 					return true;
 				}
 			}
@@ -110,7 +113,7 @@ bool check_pure_symbol(formulae formulae, symbol symbol)
 	{
 		for (int j = 0; j < 3; j++) // number of variables of each clause
 		{
-			if (formulae.f[i].S[j].name == -symbol.name) { return true; }
+			if (formulae.f[i].S[j].name == symbol.name && formulae.f[i].S[j].value == symbol.value) { return true; }
 			else { return false; }
 		}
 	}
