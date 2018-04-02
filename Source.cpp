@@ -32,7 +32,8 @@ struct formulae
 	bool assigned;//a flag to know if it is assigned or not
 };
 
-formulae read_initial() {
+formulae read_initial() 
+{
 	formulae T_f;
 	fstream inputfile("E:\\Course\\AI\\AI2\\HW2_AI2\\Sample1.txt");
 	if (inputfile.is_open()) {
@@ -75,21 +76,49 @@ formulae read_initial() {
 		cout << "\tCouldn't read file!\n\tPlease enter correct path \n";
 		exit(0);
 	}
-
-
 }
-
-bool check_unit_clause(formulae formulae) {
-
+/*a clause which has exactly one symbol which is still unassigned
+and the other symbols are all assigned to false*/ 
+bool check_unit_clause(formulae formulae, clause clause) 
+{
+	for (int i = 0; i < 3; i++)
+	{
+		if (clause.S[i].assigned == false) {
+			if (i == 0) {
+				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].sign == false && clause.S[i + 2].sign == false) {
+					return true;
+				}
+			}
+			if (i == 1) {
+				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].sign == false && clause.S[i + 1].sign == false) {
+					return true;
+				}
+			}
+			if (i == 2) {
+				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].sign == false && clause.S[i - 2].sign == false) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
-
-bool check_pure_symbol(formulae formulae) {
-
+//pure symbols are occur whit only one polarity in the formulae so can be deleted
+bool check_pure_symbol(formulae formulae, symbol symbol)
+{
+	for (int i = 0; i < 10; i++) // number of clauses
+	{
+		for (int j = 0; j < 3; j++) // number of variables of each clause
+		{
+			if (formulae.f[i].S[j].name == -symbol.name) { return true; }
+			else { return false; }
+		}
+	}
 }
-
-bool check_empty_clause(formulae formulae) {
-
-	for (int i = 0; i < 10; i++) // numOfClauses
+//empty clauses contain no symbol
+bool check_empty_clause(formulae formulae) 
+{
+	for (int i = 0; i < 10; i++) // number of clauses
 	{
 		if (formulae.f[i].isempty == true) { return true; }
 		else { return false; }
@@ -169,7 +198,8 @@ bool DPLL(formulae formul, vector<symbol> Model)
 	if (formul.assigned = true)
 		return formul.satisfiable;
 }
-int main() {
+int main() 
+{
 
 	formulae input = read_initial();
 }
