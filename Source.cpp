@@ -2,7 +2,7 @@
 #include<vector>
 #include<fstream>
 #include<string>
-#include <algorithm>
+
 using namespace std;
 
 
@@ -34,8 +34,6 @@ struct formulae
 
 formulae read_initial() {
 	formulae T_f;
-
-
 	fstream inputfile("E:\\Course\\AI\\AI2\\HW2_AI2\\Sample1.txt");
 	if (inputfile.is_open()) {
 		string dummyLine;
@@ -89,13 +87,13 @@ bool check_pure_symbol(formulae formulae) {
 
 }
 
-bool empty(formulae formulae) {
-	if (formulae.f.empty()) { return true; }
-	else{return false;}
-}
 bool check_empty_clause(formulae formulae) {
 
-	return std::for_each(formulae.f.begin(), formulae.f.end(), empty(formulae));
+	for (int i = 0; i < 10; i++) // numOfClauses
+	{
+		if (formulae.f[i].isempty == true) { return true; }
+		else { return false; }
+	}
 }
 
 void check_satisfiability_formulae(formulae formulae) /**/
