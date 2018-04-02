@@ -2,7 +2,7 @@
 #include<vector>
 #include<fstream>
 #include<string>
-
+#include <algorithm>
 using namespace std;
 
 
@@ -34,21 +34,33 @@ struct formulae
 
 formulae read_initial() {
 	formulae T_f;
-	symbol T_s;
-	clause T_c;
-	fstream inputfile("C:\\Users\\Mirzababa\\Downloads\\Telegram Desktop\\sample3.txt");
+
+
+	fstream inputfile("E:\\Course\\AI\\AI2\\HW2_AI2\\Sample1.txt");
 	if (inputfile.is_open()) {
 		string dummyLine;
 		getline(inputfile, dummyLine);
-		for (int i = 0; i < 9; i++) {
-			for (int j = 0; j < 2; j++) {
+		for (int i = 0; i < 10; i++) {
+			clause T_c;
+			for (int j = 0; j < 3; j++) {
+				symbol T_s;
 				inputfile >> T_s.name;
 				T_s.assigned = false;
 				T_s.value = 'N';
 				T_s.pure = false;
+				if (T_s.name > 0) 
+				{
+					T_s.sign = true;
+				}
+				else
+				{
+					T_s.sign = false;
+				}
+				
 
 				T_c.S.push_back(T_s);
 			}
+
 			T_c.assigned = false;
 			T_c.isempty = false;
 			T_c.isunit = false;
@@ -56,6 +68,7 @@ formulae read_initial() {
 
 			T_f.f.push_back(T_c);
 			T_f.satisfiable = false;
+			T_f.assigned = false;
 		}
 		return T_f;
 	}
@@ -67,6 +80,24 @@ formulae read_initial() {
 
 
 }
+
+bool check_unit_clause(formulae formulae) {
+
+}
+
+bool check_pure_symbol(formulae formulae) {
+
+}
+
+bool empty(formulae formulae) {
+	if (formulae.f.empty()) { return true; }
+	else{return false;}
+}
+bool check_empty_clause(formulae formulae) {
+
+	return std::for_each(formulae.f.begin(), formulae.f.end(), empty(formulae));
+}
+
 void check_satisfiability_formulae(formulae formulae) /**/
 {
 	formulae.assigned = false;
