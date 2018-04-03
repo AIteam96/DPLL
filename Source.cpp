@@ -128,7 +128,8 @@ bool check_empty_clause(formulae formulae)
 	}
 }
 
-void check_satisfiability_formulae(formulae formulae) /**/
+/* checks if this formulae is satisfiable or not*/
+void check_satisfiability_formulae(formulae formulae)
 {
 	formulae.assigned = false;
 	int count = 0;
@@ -156,6 +157,15 @@ void check_satisfiability_formulae(formulae formulae) /**/
 		}
 	}
 }
+/*
+logical OR -> V
+a  b  | return
+-------|-------
+0  0  |   0
+0  1  |   1
+1  0  |   1
+1  1  |   1
+*/
 bool logicOR(bool a, bool b)
 {
 	if (a == true || b == true)
@@ -163,6 +173,9 @@ bool logicOR(bool a, bool b)
 	if (a == false && b == false)
 		return true;
 }
+/*
+
+*/
 void update(formulae formul, symbol symbol)
 {
 	for (int i = 0; i < formul.f.size(); i++)
@@ -196,10 +209,55 @@ void update(formulae formul, symbol symbol)
 	}
 
 }
-bool DPLL(formulae formul, vector<symbol> Model)
+/*
+DPLL complite Function
+*/
+bool DPLL(formulae formul, vector<symbol> Model, vector<symbol> symbols)
 {
+
 	if (formul.assigned = true)
 		return formul.satisfiable;
+
+
+	for (int i = 0; i < symbols.size(); i++)
+	{
+		if (check_pure_symbol(formul, symbols[i]))
+		{
+			symbol symbol = symbols[i];
+			update(formul, symbol);
+			Model.push_back(symbol);
+			symbols.erase(symbols.begin() + i);
+			return DPLL(formul, Model, symbols);
+		}
+	}
+
+
+	/*for (int i = 0; i < formul.f.size(); i++)
+	{
+	if (check_unit_clause (formul, formul.f[i]))
+	{
+	clause clausel = formul.f[i];
+	return DPLL(formul, Model, symbols);
+	}
+	}*/
+
+
+	symbol symbol1 = symbols[0];
+	symbol symbol2 = symbols[0];
+	symbols.erase(symbols.begin());
+	symbol1.assigned = symbol2.assigned = true;
+	symbol1.value = true;
+	symbol2.value = false;
+	vector<symbol> model1, model2;
+	model1 = model2 = Model;
+	model1.push_back(symbol1);
+	model2.push_back(symbol2);
+	formulae formul1, formul2;
+	formul1 = formul2 = formul;
+	update(formul1, symbol2);
+	update(formul1, symbol2);
+	return logicOR(DPLL(formul1, model1, symbols), DPLL(formul2, model2, symbols));
+
 }
 int main() 
 {
