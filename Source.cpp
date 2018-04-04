@@ -45,7 +45,7 @@ formulae read_initial()
 			clause T_c;
 			for (int j = 0; j < 3; j++) {
 				symbol T_s;
-				inputfile >> dummyint;
+				inputfile >> dummyint; //skip file's first line 
 				T_s.name = abs(dummyint);
 				T_s.assigned = false;
 				T_s.value = 'N';
@@ -82,23 +82,23 @@ formulae read_initial()
 }
 /*a clause which has exactly one symbol which is still unassigned
 and the other symbols are all assigned to false*/ 
-bool check_unit_clause(formulae formulae, clause clause) 
+bool check_unit_clause(clause clause) 
 {
 	for (int i = 0; i < 3; i++)
 	{
 		if (clause.S[i].assigned == false) {
 			if (i == 0) {
-				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].value == false && clause.S[i + 2].value == false) {
+				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].value == 'F' && clause.S[i + 2].value == 'F') {
 					return true;
 				}
 			}
 			if (i == 1) {
-				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].value == false && clause.S[i + 1].value == false) {
+				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].value == 'F' && clause.S[i + 1].value == 'F') {
 					return true;
 				}
 			}
 			if (i == 2) {
-				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].value == false && clause.S[i - 2].value == false) {
+				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].value == 'F' && clause.S[i - 2].value == 'F') {
 					return true;
 				}
 			}
@@ -128,7 +128,6 @@ bool check_empty_clause(formulae formulae)
 	}
 }
 
-/* checks if this formulae is satisfiable or not*/
 void check_satisfiability_formulae(formulae formulae)
 {
 	formulae.assigned = false;
@@ -157,15 +156,7 @@ void check_satisfiability_formulae(formulae formulae)
 		}
 	}
 }
-/*
-logical OR -> V
-a  b  | return
--------|-------
-0  0  |   0
-0  1  |   1
-1  0  |   1
-1  1  |   1
-*/
+
 bool logicOR(bool a, bool b)
 {
 	if (a == true || b == true)
@@ -173,9 +164,7 @@ bool logicOR(bool a, bool b)
 	if (a == false && b == false)
 		return true;
 }
-/*
 
-*/
 void update(formulae formul, symbol symbol)
 {
 	for (int i = 0; i < formul.f.size(); i++)
@@ -205,62 +194,88 @@ void update(formulae formul, symbol symbol)
 				formul.f[i].assigned = true;
 			}
 		}
-
 	}
-
 }
-/*
-DPLL complite Function
-*/
-bool DPLL(formulae formul, vector<symbol> Model, vector<symbol> symbols)
+
+void update(formulae formul, symbol symbol)
 {
-
-	if (formul.assigned = true)
-		return formul.satisfiable;
-
-
-	for (int i = 0; i < symbols.size(); i++)
+	for (int i = 0; i < formul.f.size(); i++)
 	{
-		if (check_pure_symbol(formul, symbols[i]))
+		int count = 0;
+		bool clause_value = false;
+		for (int j = 0; j < formul.f[i].S.size(); j++)
 		{
-			symbol symbol = symbols[i];
-			update(formul, symbol);
-			Model.push_back(symbol);
-			symbols.erase(symbols.begin() + i);
-			return DPLL(formul, Model, symbols);
+			if (formul.f[i].S[j].assigned)
+			{
+				count++;
+				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
+			}
+			if (formul.f[i].S[j].name == symbol.name)
+			{
+				if (formul.f[i].S[j].sign == symbol.sign)
+					formul.f[i].S[j].value = symbol.value;
+				else
+					formul.f[i].S[j].value = !symbol.value;
+				formul.f[i].S[j].assigned = true;
+				count++;
+				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
+			}
+			if (count == formul.f[i].S.size())
+			{
+				formul.f[i].value = clause_value;
+				formul.f[i].assigned = true;
+			}
 		}
 	}
-
-
-	/*for (int i = 0; i < formul.f.size(); i++)
-	{
-	if (check_unit_clause (formul, formul.f[i]))
-	{
-	clause clausel = formul.f[i];
-	return DPLL(formul, Model, symbols);
-	}
-	}*/
-
-
-	symbol symbol1 = symbols[0];
-	symbol symbol2 = symbols[0];
-	symbols.erase(symbols.begin());
-	symbol1.assigned = symbol2.assigned = true;
-	symbol1.value = true;
-	symbol2.value = false;
-	vector<symbol> model1, model2;
-	model1 = model2 = Model;
-	model1.push_back(symbol1);
-	model2.push_back(symbol2);
-	formulae formul1, formul2;
-	formul1 = formul2 = formul;
-	update(formul1, symbol2);
-	update(formul1, symbol2);
-	return logicOR(DPLL(formul1, model1, symbols), DPLL(formul2, model2, symbols));
-
 }
+
+bool DPLL(formulae formul, vector<symbol> Model)
+{
+	if (formul.assigned = true)
+		return formul.satisfiable;
+}
+
 int main() 
 {
 
 	formulae input = read_initial();
+	
+	/*unit clause test:
+	clause test;
+	symbol temp;
+	test.assigned = false;
+	test.isempty = false;
+	test.isunit = false;
+	test.value = 'N';
+	for (int i = 0; i < 3; i++)
+	{
+		test.S.push_back(temp);
+	}
+
+	test.S[0].assigned = true;
+	test.S[0].name = 10;
+	test.S[0].pure = false;
+	test.S[0].sign = true;
+	test.S[0].value = 'F';
+
+	test.S[1].assigned = true;
+	test.S[1].name = 9;
+	test.S[1].pure = false;
+	test.S[1].sign = true;
+	test.S[1].value = 'T';
+
+	test.S[2].assigned = false;
+	test.S[2].name = 3;
+	test.S[2].pure = false;
+	test.S[2].sign = false;
+	test.S[2].value = 'F';
+	
+	if (check_unit_clause(input.f[0]) == true)
+	{
+		cout << "it is a unit clause";
+	}
+	else
+	{
+		cout << "NO";
+	}*/
 }
