@@ -19,8 +19,6 @@ struct symbol
 
 struct clause
 {
-	bool isempty;
-	bool isunit;
 	char value;//T for true or F for false or N for null (temporary)
 	bool assigned;//a flag to know if it is assigned or not
 	vector<symbol> S;//A set of symbols that have created the clause
@@ -32,12 +30,14 @@ struct formulae
 	bool satisfiable;//satisfiability of the formulae
 	bool assigned;//a flag to know if it is assigned or not
 };
-
+/*Explanation: create the formulae by reading from file
+input: void
+output:formulae(set of clauses in CNF form*/
 formulae read_initial() 
 {
 	int dummyint;
 	formulae T_f;
-	fstream inputfile("E:\\Course\\AI\\AI2\\HW2_AI2\\Sample1.txt");
+	fstream inputfile("file.txt");
 	if (inputfile.is_open()) {
 		string dummyLine;
 		getline(inputfile, dummyLine);
@@ -64,8 +64,6 @@ formulae read_initial()
 			}
 
 			T_c.assigned = false;
-			T_c.isempty = false;
-			T_c.isunit = false;
 			T_c.value = 'N';
 
 			T_f.f.push_back(T_c);
@@ -80,54 +78,151 @@ formulae read_initial()
 		exit(0);
 	}
 }
-/*a clause which has exactly one symbol which is still unassigned
-and the other symbols are all assigned to false*/ 
-bool check_unit_clause(clause clause) 
+/*Explanation: a clause which has exactly one symbol which is still unassigned
+and the other symbols are all assigned to false
+input: a specific clause
+output:true or false*/
+bool check_unit_clause(formulae formulae)
 {
-	for (int i = 0; i < 3; i++)
-	{
-		if (clause.S[i].assigned == false) {
-			if (i == 0) {
-				if (clause.S[i + 1].assigned == true && clause.S[i + 2].assigned == true && clause.S[i + 1].value == 'F' && clause.S[i + 2].value == 'F') {
-					return true;
+	for (int i = 0; i < formulae.f.size(); i++) {
+		for (int j = 0; j < formulae.f[i].S.size(); j++)
+		{
+			if (formulae.f[i].S[j].assigned == false) {
+				if (i == 0) {
+					if (formulae.f[i].S[j + 1].assigned == true && formulae.f[i].S[j + 2].assigned == true && formulae.f[i].S[j + 1].value == 'F' && formulae.f[i].S[j + 2].value == 'F') {
+						return true;
+					}
 				}
-			}
-			if (i == 1) {
-				if (clause.S[i - 1].assigned == true && clause.S[i + 1].assigned == true && clause.S[i - 1].value == 'F' && clause.S[i + 1].value == 'F') {
-					return true;
+				if (i == 1) {
+					if (formulae.f[i].S[j - 1].assigned == true && formulae.f[i].S[j + 1].assigned == true && formulae.f[i].S[j - 1].value == 'F' && formulae.f[i].S[j + 1].value == 'F') {
+						return true;
+					}
 				}
-			}
-			if (i == 2) {
-				if (clause.S[i - 1].assigned == true && clause.S[i - 2].assigned == true && clause.S[i - 1].value == 'F' && clause.S[i - 2].value == 'F') {
-					return true;
+				if (i == 2) {
+					if (formulae.f[i].S[j - 1].assigned == true && formulae.f[i].S[j - 2].assigned == true && formulae.f[i].S[j - 1].value == 'F' && formulae.f[i].S[j - 2].value == 'F') {
+						return true;
+					}
 				}
 			}
 		}
 	}
 	return false;
 }
-//pure symbols are occur whit only one polarity in the formulae so can be deleted
+/*Explanation: updat model and formula after unit clause cheking
+and the other symbols are all assigned to false
+input: formulae and model
+output:new formulae and new model(call by reference) */
+formulae unit_check_update(formulae formulae, vector<symbol>& model) {
+	for (int i = 0; i < formulae.f.size(); i++) {
+		if (check_unit_clause(formulae) == true) {
+			for (int j = 0; j < formulae.f[i].S.size(); j++) {
+				if (formulae.f[i].S[j].assigned == false) {
+					formulae.f[i].S[j].value = 'T';
+					formulae.f[i].value = 'T';
+					model.push_back(formulae.f[i].S[j]);
+				}
+			}
+		}
+	}
+}
+/*Explanation: pure symbols are occur whit only one polarity in the formulae so can be deleted
+and the other symbols are all assigned to false
+input : formulae and model
+output : true or false */
 bool check_pure_symbol(formulae formulae, symbol symbol)
 {
-	for (int i = 0; i < 10; i++) // number of clauses
+	for (int i = 0; i < formulae.f.size(); i++) // number of clauses
 	{
-		for (int j = 0; j < 3; j++) // number of variables of each clause
+		for (int j = 0; j < formulae.f[i].S.size(); j++) // number of variables of each clause
 		{
-			if (formulae.f[i].S[j].name == symbol.name && formulae.f[i].S[j].value == symbol.value) { return true; }
+			if (formulae.f[i].S[j].name == symbol.name && formulae.f[i].S[j].sign == symbol.sign) { return true; }
 			else { return false; }
 		}
 	}
 }
-//empty clauses contain no symbol
+/*Explanation: After defining a pure symbol, it should be deleted from the formula
+input : formulae and a symbol
+output : new formulae */
+formulae Delete_pure_symbol(formulae formulae, symbol symbol) 
+{
+	for (int i = 0; i < formulae.f.size(); i++){
+		for (int j = 0; j < formulae.f[i].S.size(); j++) {
+			if (formulae.f[i].S[j].name == symbol.name && formulae.f[i].S[j].sign == symbol.sign) {
+				formulae.f[i].S.erase(formulae.f[i].S.begin() + j); //Deletes the jth element 
+			}
+		}
+	}
+	return formulae;
+}
+/*Explanation: Determines whether the clause is empty or notAfter defining a pure symbol, it should be deleted from the formula
+input : formulae 
+output : true or false */
 bool check_empty_clause(formulae formulae) 
 {
-	for (int i = 0; i < 10; i++) // number of clauses
+	for (int i = 0; i < formulae.f.size(); i++) // number of clauses
 	{
-		if (formulae.f[i].isempty == true) { return true; }
-		else { return false; }
+		//If the set of clauses is empty, it returns true
+		if (formulae.f[i].S.empty()) { return true; }
+	}
+}
+/*Explanation: Choose one of the symbols from the formula that are not assigned; assigned it true and add that symbol to model
+input : formulae and model
+output : new model */
+vector<symbol> selectionsymbol(formulae formulae, vector<symbol>& model)
+{
+	for (int i = 0; i < formulae.f.size(); i++) {
+		for (int j = 0; j < formulae.f[i].S.size(); j++) {
+			if (formulae.f[i].S[j].assigned == false) {
+				model.push_back(formulae.f[i].S[j]);
+				model.back().value = 'T';
+				model.back().assigned = true;
+			}
+		}
+	}
+	return model;
+}
+/*Explanation: Choose one of the symbols from the formula that are not assigned; assigned the opposit symbol true and add that symbol to model
+input : formulae and model
+output : new model */
+vector<symbol> selectionoppositesimbol(formulae formulae, vector<symbol>& model)
+{
+	for (int i = 0; i < formulae.f.size(); i++) {
+		for (int j = 0; j < formulae.f[i].S.size(); j++) {
+			if (formulae.f[i].S[j].assigned == false) {
+				model.push_back(formulae.f[i].S[j]);
+				model.back().value = 'F';
+				model.back().assigned = true;
+			}
+		}
+	}
+	return model;
+}
+/*Explanation: update formulae with model
+input : formulae and model
+output : new formula */
+formulae updateformulae(formulae formulae, vector<symbol>& model)
+{
+	for (int i = 0; i < model.size(); i++) {
+		for (int j = 0; j < formulae.f.size(); j++) {
+			for (int k = 0; k < formulae.f[i].S.size(); k++) {
+				if (formulae.f[j].S[k].name == model[i].name && formulae.f[j].S[k].sign == model[i].sign ) {
+					formulae.f[j].S[k].value = model[i].value;
+					formulae.f[j].S[k].assigned = true;
+					return formulae;
+				}
+				if (formulae.f[j].S[k].name == model[i].name && formulae.f[j].S[k].sign != model[i].sign) {
+					formulae.f[j].S[k].value = !(model[i].value);
+					formulae.f[j].S[k].assigned = true;
+					return formulae;
+				}
+			}
+		}
 	}
 }
 
+/*Explanation: check if the formulae is satisfiab or not
+input : formulae
+output : void */
 void check_satisfiability_formulae(formulae formulae)
 {
 	formulae.assigned = false;
@@ -156,16 +251,18 @@ void check_satisfiability_formulae(formulae formulae)
 		}
 	}
 }
-
-bool logicOR(bool a, bool b)
+/*Explanation: implement logic OR
+input : tow symbol's value or clause's value
+output : true or false */
+bool logicOR(char a, bool b)
 {
-	if (a == true || b == true)
+	if (a == 'T' || b == true)
 		return true;
-	if (a == false && b == false)
+	if (a == 'F' && b == false)
 		return true;
 }
 
-void update(formulae formul, symbol symbol)
+/*void update(formulae formul, symbol symbol)
 {
 	for (int i = 0; i < formul.f.size(); i++)
 	{
@@ -196,86 +293,51 @@ void update(formulae formul, symbol symbol)
 		}
 	}
 }
-
-void update(formulae formul, symbol symbol)
+*/
+/*Explanation: if there is a false clause in formulae, formulae become false anyway
+input : formulae
+output : true or false */
+bool findNegativeclause(formulae formulae) 
 {
-	for (int i = 0; i < formul.f.size(); i++)
-	{
-		int count = 0;
-		bool clause_value = false;
-		for (int j = 0; j < formul.f[i].S.size(); j++)
-		{
-			if (formul.f[i].S[j].assigned)
-			{
-				count++;
-				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
-			}
-			if (formul.f[i].S[j].name == symbol.name)
-			{
-				if (formul.f[i].S[j].sign == symbol.sign)
-					formul.f[i].S[j].value = symbol.value;
-				else
-					formul.f[i].S[j].value = !symbol.value;
-				formul.f[i].S[j].assigned = true;
-				count++;
-				clause_value = logicOR(clause_value, formul.f[i].S[j].sign);
-			}
-			if (count == formul.f[i].S.size())
-			{
-				formul.f[i].value = clause_value;
-				formul.f[i].assigned = true;
-			}
-		}
+	for (int i = 0; i < formulae.f.size(); i++) {
+		if (formulae.f[i].value == 'F') { return true; }
+		else { return false; }
 	}
 }
 
-bool DPLL(formulae formul, vector<symbol> Model)
+/*Explanation: main part af Algorithm if there is a satisfying truth assignment model for a CNF formula formulae
+input : formulae and model
+output : true or false */
+bool DPLL(formulae formul, vector<symbol>& Model) 
 {
 	if (formul.assigned = true)
 		return formul.satisfiable;
-}
 
+	else {
+		if (check_empty_clause(formul) == true) { return false; }
+
+		if (check_unit_clause(formul) == true) {
+			DPLL(unit_check_update(formul, Model), Model);
+		}
+		return DPLL(formul, selectionsymbol(formul, Model));
+
+	}
+}
 int main() 
 {
-
 	formulae input = read_initial();
-	
-	/*unit clause test:
-	clause test;
-	symbol temp;
-	test.assigned = false;
-	test.isempty = false;
-	test.isunit = false;
-	test.value = 'N';
-	for (int i = 0; i < 3; i++)
-	{
-		test.S.push_back(temp);
+	/*delete pure symbols at first*/
+	for (int j = 0; j < input.f.size(); j++) {
+		for (int k = 0; k < input.f[j].S.size(); k++) {
+			if (check_pure_symbol(input, input.f[j].S[k]) == true) {
+				input = Delete_pure_symbol(input, input.f[j].S[k]);
+			}
+		}
 	}
 
-	test.S[0].assigned = true;
-	test.S[0].name = 10;
-	test.S[0].pure = false;
-	test.S[0].sign = true;
-	test.S[0].value = 'F';
+	vector<symbol> model;
 
-	test.S[1].assigned = true;
-	test.S[1].name = 9;
-	test.S[1].pure = false;
-	test.S[1].sign = true;
-	test.S[1].value = 'T';
-
-	test.S[2].assigned = false;
-	test.S[2].name = 3;
-	test.S[2].pure = false;
-	test.S[2].sign = false;
-	test.S[2].value = 'F';
+	if (DPLL(input, model) == true) { cout << "Model Found!"; }
+	else { cout << "Inconsistency!"; }
 	
-	if (check_unit_clause(input.f[0]) == true)
-	{
-		cout << "it is a unit clause";
-	}
-	else
-	{
-		cout << "NO";
-	}*/
 }
